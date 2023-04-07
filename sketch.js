@@ -1,9 +1,12 @@
 let ballSize = 99;
+let guessCounter = 0;
 let txtSize = 41;
 let growFactor = 0.2;
 let textInput = 100;
-let imgLaser, imgDNA, imgChemistry, imgScales, imgStars, audio, amp, volSize, myFont, inp;
-let laser = dna = chemistry = scales = stars = game = false;
+let countdown = 2700; // 40 minutes in seconds
+let imgLaser, imgDNA, imgChemistry, imgScales, imgStars, introClip, amp, volSize, myFont, inp, timer;
+let laser = dna = chemistry = scales = stars = game = isAudioPlaying = false;
+let hint = true;
 let laserCode = '1111';
 let dnaCode = '2222';
 let chemistryCode = '3333';
@@ -13,13 +16,23 @@ let gameCode = 'FARTS';
 
 function preload() {
   myFont = loadFont('Audiowide.ttf')
-  audio = loadSound('glados.wav');
+  introClip = loadSound('audio/intro.mp3');
+  laserClip = loadSound('audio/laser.mp3');
+  dnaClip = loadSound('audio/dnaClip.mp3');
+  chemistryClip = loadSound('audio/chemistryClip.mp3');
+  scalesClip = loadSound('audio/massClip.mp3');
+  starsClip = loadSound('audio/astronomyClip.mp3');
+  hintClip = loadSound('audio/hintClip.mp3');
+  clappingClip = loadSound('audio/clapping.wav');
+  halfTimeClip = loadSound('audio/halfTimeClip.mp3');
+  tenLeftClip = loadSound('audio/tenLeftClip.mp3');
+  warningClip = loadSound('audio/warningClip.mp3');
   getAudioContext().resume();
-  imgLaser = loadImage('laser.png');
-  imgDNA = loadImage('dna.png');
-  imgChemistry = loadImage('chemistry.png');
-  imgScales = loadImage('scales.png');
-  imgStars = loadImage('stars.png');
+  imgLaser = loadImage('images/laser.png');
+  imgDNA = loadImage('images/dna.png');
+  imgChemistry = loadImage('images/chemistry.png');
+  imgScales = loadImage('images/scales.png');
+  imgStars = loadImage('images/stars.png');
 }
 
 function setup() {
@@ -51,6 +64,12 @@ function draw() {
       txtSize += growFactor;
   }
   if (game){
+    background(30);
+    push();
+    textAlign(CENTER);
+    textSize(30);
+    text(convertSeconds(countdown), width/2, 50);
+    pop();
     let vol = amp.getLevel();
     volSize = map(vol,0,1,100,200);
     // Check if all puzzles are solved.
@@ -60,6 +79,18 @@ function draw() {
       textAlign(CENTER);
       textSize(50);
       text('Congratulations',width/2,100);
+      pop();
+    }
+    // Hint Button
+    if (hint){
+      push();
+      noFill();
+      stroke(0,255,0);
+      rect(width-50,height-25,100,50, 10);
+      textAlign(CENTER,CENTER);
+      fill(0,255,0);
+      textSize(30);
+      text('HINT',width-50,height-25)
       pop();
     }
     // Draw puzzle boxes
@@ -107,18 +138,30 @@ function keyPressed() {
   if (keyCode === ENTER) {
     if (inp.value() == laserCode){
       laser = true;
+      laserClip.play();
     }
-    if (inp.value() == dnaCode){
+    else if (inp.value() == dnaCode){
       dna = true;
+      dnaClip.play();
     }
-    if (inp.value() == chemistryCode){
+    else if (inp.value() == chemistryCode){
       chemistry = true;
+      chemistryClip.play();
     }
-    if (inp.value() == starsCode){
+    else if (inp.value() == starsCode){
       stars = true;
+      starsClip.play();
     }
-    if (inp.value() == scalesCode){
+    else if (inp.value() == scalesCode){
       scales = true;
+      scalesClip.play();
+      clappingClip.play();
+    }
+    else if (inp.value() != '') {
+      guessCounter += 1;
+      if (guessCounter == 5){
+        warningClip.play();
+      }
     }
     inp.value('');
   }
@@ -132,8 +175,50 @@ function mouseClicked() {
       inp.size(textInput);
       inp.position(windowWidth/2-50,windowHeight/2);
       background(30);
-      audio.play();
+      // introClip.play();
+      // introClip.onended(startTimer);
+      startTimer();
+    }
+  }
+  else {
+    if (mouseX > width - 100 && mouseX < width && mouseY > height - 50 && mouseY < height && hint == true && isAudioPlaying == false){
+      hint = false;
+      isAudioPlaying = true;
+      hintClip.play();
+      hintClip.onended(audioSwitch);
     }
   }
 }
 
+function countdownTimer() {
+  if (countdown > 0) {
+    countdown--;
+    if (countdown == 1350 && isAudioPlaying == false){
+      halfTimeClip.play();
+      isAudioPlaying = true;
+      halfTimeClip.onended(audioSwitch);
+    }
+    if (countdown == 600 && isAudioPlaying == false){
+      tenLeftClip.play();
+      isAudioPlaying = true;
+      tenLeftClip.onended(audioSwitch);
+    } 
+  } 
+  else {
+    clearInterval(timer);
+  }
+}
+
+function convertSeconds(s) {
+  let minutes = floor(s / 60);
+  let seconds = s % 60;
+  return nf(minutes, 2) + ":" + nf(seconds, 2);
+}
+
+function startTimer() {
+  timer = setInterval(countdownTimer, 1000);
+}
+
+function audioSwitch() {
+  isAudioPlaying = false;
+}
