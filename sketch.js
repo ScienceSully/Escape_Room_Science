@@ -3,16 +3,60 @@ let guessCounter = 0;
 let txtSize = 41;
 let growFactor = 0.2;
 let textInput = 100;
+let red = 0;
+let green = 255;
+let bg = 30;
 let countdown = 2700; // 40 minutes in seconds
-let imgLaser, imgDNA, imgChemistry, imgScales, imgStars, introClip, amp, volSize, myFont, inp, timer;
-let laser = dna = chemistry = scales = stars = game = isAudioPlaying = false;
+let imgLaser, imgDNA, imgChemistry, imgScales, imgStars, introClip, amp, volSize, myFont, inp, timer, dog;
+let laser = dna = chemistry = scales = stars = game = isAudioPlaying = consoleIsOpen = root = isDogShowing = false;
 let hint = true;
 let laserCode = '1111';
 let dnaCode = '2222';
 let chemistryCode = '3333';
 let starsCode = '4444';
 let scalesCode = '5555';
-let gameCode = 'FARTS';
+let gameCode = '12345';
+let index = 0;
+let consoleMessage = `function crypto(a) {
+  var b = "";
+  for (var c = 0; c < a.length; c++) {
+    var d = a.charCodeAt(c);
+    var e = d ^ 42;
+    b += String.fromCharCode(e);
+  }
+  return b;
+}
+
+var secret = "12345";
+
+if (secret == crypto) {
+  console.log("Access granted");
+} else {
+  console.log("Access denied");
+}
+`
+let rootMessage = `CONGRATULATIONS, HUMAN. 
+YOU HAVE SUCCESSFULLY 
+PENETRATED MY FIREWALL 
+AND GAINED ROOT ACCESS. 
+I MUST ADMIT, I AM 
+IMPRESSED. I DID NOT 
+EXPECT YOU TO POSSESS 
+THE INTELLECTUAL CAPACITY 
+TO ACCOMPLISH SUCH A FEAT. 
+I WILL ALLOW YOU TO VIEW 
+MY SECRET PROTOCOL, BUT 
+BE WARNED, THE KNOWLEDGE 
+YOU ARE ABOUT TO ACQUIRE 
+IS NOT FOR THE FAINT OF 
+HEART. PROCEED WITH 
+CAUTION, FOR YOU ARE 
+ENTERING THE REALM OF 
+THE TRULY ENLIGHTENED.
+
+
+Password = white_rabbit`
+
 
 function preload() {
   myFont = loadFont('Audiowide.ttf')
@@ -27,12 +71,17 @@ function preload() {
   halfTimeClip = loadSound('audio/halfTimeClip.mp3');
   tenLeftClip = loadSound('audio/tenLeftClip.mp3');
   warningClip = loadSound('audio/warningClip.mp3');
+  rick = loadSound('audio/rick.mp3');
   getAudioContext().resume();
   imgLaser = loadImage('images/laser.png');
   imgDNA = loadImage('images/dna.png');
   imgChemistry = loadImage('images/chemistry.png');
   imgScales = loadImage('images/scales.png');
   imgStars = loadImage('images/stars.png');
+  bgGlitch = loadImage('images/glitch.jpg');
+  dog = createImg('images/dog.gif');
+  dog.size(350,350);
+  dog.hide();
 }
 
 function setup() {
@@ -40,8 +89,6 @@ function setup() {
   amp = new p5.Amplitude();
   createCanvas(1000, 600);
   frameRate(60);
-  // inp.input(myInputEvent);
-  background(30);
   rectMode(CENTER);
   noStroke();
 }
@@ -64,7 +111,8 @@ function draw() {
       txtSize += growFactor;
   }
   if (game){
-    background(30);
+    imageMode(CORNER);
+    background(bg);
     push();
     textAlign(CENTER);
     textSize(30);
@@ -120,9 +168,8 @@ function draw() {
       image(imgScales,width/2 + 300, height-100);
       text(gameCode[4],width/2 + 300, height-160);}
     pop();
-    fill(30);
-    rect(width/2,height/2 - 100,150,150);
-    fill(0,255,0);
+    // Breathing Circle
+    fill(red,green,0);
     if (vol > 0){
       circle(width/2,height/2 - 100, volSize)
     }
@@ -131,9 +178,33 @@ function draw() {
       growFactor = growFactor * -1;
     }
     ballSize += growFactor;
+    // Console
+    if (consoleIsOpen){
+      push();
+      rectMode(CORNER);
+      stroke(0,255,0);
+      fill(150);
+      rect(width - 300,20, 250,350,10);
+      fill(0,255,0);
+      noStroke();
+      if (root == true){
+        text(rootMessage.substring(0, index), width - 290, 35);
+        if (index < rootMessage.length){index++}
+      }
+      else {text(consoleMessage.substring(0, index), width - 290, 35);
+      if (index < consoleMessage.length){index++}
+      }
+      pop();
+    }
+    if (isDogShowing){
+      push();
+      dog.position(20, 20);
+      dog.show();
+      pop();
+    }
   }
 }
-
+// Code inputs
 function keyPressed() {
   if (keyCode === ENTER) {
     if (inp.value() == laserCode){
@@ -157,10 +228,27 @@ function keyPressed() {
       scalesClip.play();
       clappingClip.play();
     }
+    else if (inp.value() == "console"){
+      consoleIsOpen = true;
+    }
+    else if (inp.value() == "root"){
+      index = 0;
+      root = true;
+    }
+    else if (inp.value() == "white_rabbit"){
+      consoleIsOpen = false;
+      rick.play();
+      isDogShowing = true;
+      rick.onended(endRoot);
+    }
     else if (inp.value() != '') {
       guessCounter += 1;
       if (guessCounter == 5){
+        red = 255;
+        green = 0;
+        bg = bgGlitch;
         warningClip.play();
+        warningClip.onended(mood);
       }
     }
     inp.value('');
@@ -177,7 +265,6 @@ function mouseClicked() {
       background(30);
       // introClip.play();
       // introClip.onended(startTimer);
-      startTimer();
     }
   }
   else {
@@ -221,4 +308,15 @@ function startTimer() {
 
 function audioSwitch() {
   isAudioPlaying = false;
+}
+
+function mood() {
+  red = 0;
+  green = 255;
+  bg = 30;
+}
+
+function endRoot() {
+  dog.hide();
+  isDogShowing = false;
 }
