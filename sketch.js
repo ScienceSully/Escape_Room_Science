@@ -27,7 +27,7 @@ let consoleMessage = `function crypto(a) {
   return b;
 }
 
-var secret = "12345";
+var secret = "root";
 
 if (secret == crypto) {
   console.log("Access granted");
